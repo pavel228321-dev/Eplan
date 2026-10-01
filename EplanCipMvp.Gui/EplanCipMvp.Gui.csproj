@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>EplanCipMvp.Gui</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EplanCipMvp.Core\EplanCipMvp.Core.csproj" />
+    <!--
+      Переиспользуем VfdPageCopier.cs и всю EPLAN-обвязку (AssemblyResolver/
+      EplApplication/ProjectManager) из EplanCipMvp.App — не дублируем.
+      Ссылка на .exe-проект как на библиотеку — работает штатно в .NET,
+      публичные классы EplanCipMvp.App доступны отсюда.
+    -->
+    <ProjectReference Include="..\EplanCipMvp.App\EplanCipMvp.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Те же сборки, что и в EplanCipMvp.App.csproj — см. комментарий там
+      про имена (суффикс "u") и как поправить путь под вашу установку.
+    -->
+    <Reference Include="Eplan.EplApi.Baseu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Baseu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.DataModelu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.DataModelu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.HEServicesu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.HEServicesu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Systemu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Systemu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Starteru">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Starteru.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

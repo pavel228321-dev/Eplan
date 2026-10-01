@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EplanCipMvp.Core", "EplanCipMvp.Core\EplanCipMvp.Core.csproj", "{0845C212-A8E7-4075-B83C-7EEE5FC83584}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EplanCipMvp.Core.SelfTest", "EplanCipMvp.Core.SelfTest\EplanCipMvp.Core.SelfTest.csproj", "{0A26964B-657D-4C54-9CBF-C96CBE0D46B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EplanCipMvp.App", "EplanCipMvp.App\EplanCipMvp.App.csproj", "{02637162-C938-42EB-9714-B8EB24953F9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EplanCipMvp.Gui", "EplanCipMvp.Gui\EplanCipMvp.Gui.csproj", "{1B3F9A44-5D2E-4E11-9C77-0F2A6B7E9D01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EplanCipMvp.Web", "EplanCipMvp.Web\EplanCipMvp.Web.csproj", "{A9D0AE8B-B361-4715-8921-377717EA2B6B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0845C212-A8E7-4075-B83C-7EEE5FC83584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0845C212-A8E7-4075-B83C-7EEE5FC83584}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0845C212-A8E7-4075-B83C-7EEE5FC83584}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0845C212-A8E7-4075-B83C-7EEE5FC83584}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A26964B-657D-4C54-9CBF-C96CBE0D46B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A26964B-657D-4C54-9CBF-C96CBE0D46B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A26964B-657D-4C54-9CBF-C96CBE0D46B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A26964B-657D-4C54-9CBF-C96CBE0D46B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02637162-C938-42EB-9714-B8EB24953F9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02637162-C938-42EB-9714-B8EB24953F9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02637162-C938-42EB-9714-B8EB24953F9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02637162-C938-42EB-9714-B8EB24953F9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B3F9A44-5D2E-4E11-9C77-0F2A6B7E9D01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B3F9A44-5D2E-4E11-9C77-0F2A6B7E9D01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B3F9A44-5D2E-4E11-9C77-0F2A6B7E9D01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B3F9A44-5D2E-4E11-9C77-0F2A6B7E9D01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9D0AE8B-B361-4715-8921-377717EA2B6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9D0AE8B-B361-4715-8921-377717EA2B6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9D0AE8B-B361-4715-8921-377717EA2B6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9D0AE8B-B361-4715-8921-377717EA2B6B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

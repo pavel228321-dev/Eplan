@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>EplanCipMvp.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Чтение .xlsx без Excel/COM-интеропа. Версию можно оставить как есть -
+         NuGet сам подтянет актуальную совместимую. -->
+    <PackageReference Include="ClosedXML" Version="0.104.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- JSON правил нумерации кабелей (CableRuleStore) — часть net48, NuGet не нужен. -->
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>EplanCipMvp.Web</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EplanCipMvp.Core\EplanCipMvp.Core.csproj" />
+    <!--
+      Переиспользуем VfdPageCopier/DeviceGroupPageCopier/PlcModulePageCopier и всю
+      EPLAN-обвязку (AssemblyResolver/EplApplication/ProjectManager) из
+      EplanCipMvp.App — тот же приём, что уже применён в EplanCipMvp.Gui.csproj.
+    -->
+    <ProjectReference Include="..\EplanCipMvp.App\EplanCipMvp.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- JSON для HTTP API — часть net48, NuGet не нужен (тот же принцип
+         экономии зависимостей, что и во всём остальном проекте). -->
+    <Reference Include="System.Web.Extensions" />
+    <!-- 11.09.2026: OpenFileDialog/FolderBrowserDialog для кнопок "Обзор..." в
+         браузерной версии — см. DialogService.cs. Тоже часть net48. -->
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Та же конфигурация appsettings.json, что использует EplanCipMvp.App/Gui
+         (CopyPlcModules читает её так же, см. EplanSession.cs). Транзитивный
+         PackageReference через ProjectReference на App не сработал (SetBasePath
+         не резолвился) — добавлено явно, чтобы не зависеть от неявного потока. -->
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Статический фронтенд (index.html/app.js) — копируется рядом с exe. -->
+    <None Include="wwwroot\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Те же сборки EPLAN, что и в EplanCipMvp.App.csproj / EplanCipMvp.Gui.csproj —
+         см. комментарий там про имена (суффикс "u") и как поправить путь под вашу
+         установку. -->
+    <Reference Include="Eplan.EplApi.Baseu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Baseu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.DataModelu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.DataModelu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.HEServicesu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.HEServicesu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Systemu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Systemu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Starteru">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Starteru.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

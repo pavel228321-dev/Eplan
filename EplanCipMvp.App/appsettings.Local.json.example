@@ -1,0 +1,13 @@
+// Скопируйте этот файл в appsettings.Local.json (без .example) и пропишите
+// реальные пути для вашей машины — он подхватится автоматически поверх
+// appsettings.json и не будет мешать остальным полям (Grouping, PlcHardware
+// можно не дублировать, если не нужно их менять).
+{
+  "Eplan": {
+    "ProjectPath": "D:\\Проекты\\1364 CIP\\1364_CIP.elk",
+    "MacroBasePath": "D:\\EplanCipMvp\\Macros"
+  },
+  "Spec": {
+    "XlsxPath": "D:\\Проекты\\1364 CIP\\1364-Сводная_специфкация_изделий.xlsx"
+  }
+}

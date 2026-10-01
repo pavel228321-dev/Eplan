@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>EplanCipMvp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EplanCipMvp.Core\EplanCipMvp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Конфигурация из appsettings.json (пути, резерв, факты по заказанному железу) -->
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!--
+      appsettings.Local.json — необязательный локальный оверлей поверх appsettings.json,
+      для путей/настроек, специфичных для вашей машины (реальный путь к xlsx, к проекту
+      EPLAN и т.д.), чтобы не редактировать общий файл. Создайте вручную рядом с
+      appsettings.json, если нужно — Program.cs подхватит его сам, если он есть.
+    -->
+    <None Include="appsettings.Local.json" Condition="Exists('appsettings.Local.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      09.09.2026: имена сборок и пути ниже ПОДТВЕРЖДЕНЫ по реальной установке
+      EPLAN 2.9 (файлы Eplan.EplApi.*u.dll + *.xml, присланные вами) — это НЕ
+      "Eplan.EplApi.ApplicationObject"/"Base"/"DataModel"/"HEServices", как было
+      раньше (та версия имён, похоже, устарела/не существует в 2.9). Реальные
+      сборки — с суффиксом "u" (Unicode-сборка), плюс появилась Systemu (там
+      живёт EplApplication) и Starteru (AssemblyResolver для загрузки самих
+      сборок в рантайме).
+
+      Путь ниже — обычная папка Bin вашей установки. Проверьте у себя точное
+      имя (может быть "Platform" или "Platform '25" и т.п.) — если не совпадёт,
+      Visual Studio покажет "не найдено", тогда поправьте HintPath вручную
+      (Solution Explorer -> EplanCipMvp.App -> Dependencies -> правой кнопкой
+      на ссылку -> Properties -> Path).
+    -->
+    <Reference Include="Eplan.EplApi.Baseu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Baseu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.DataModelu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.DataModelu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.HEServicesu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.HEServicesu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Systemu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Systemu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Starteru">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Starteru.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

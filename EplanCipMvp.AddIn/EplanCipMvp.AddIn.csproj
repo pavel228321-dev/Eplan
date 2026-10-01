@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    24.09.2026: надстройка EPLAN (API add-in) — нумерация кабелей в УЖЕ ОТКРЫТОМ проекте.
+    Одна DLL без сторонних зависимостей: исходники нумерации подключены ссылками
+    (Link), а не через ProjectReference на Core/App — иначе в процесс EPLAN потянулись
+    бы ClosedXML и его зависимости (System.Buffers и т.п.), которые могут
+    конфликтовать со сборками самой EPLAN.
+  -->
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>EplanCipMvp.AddIn</AssemblyName>
+    <RootNamespace>EplanCipMvp.AddIn</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\EplanCipMvp.Core\CableNaming\*.cs" Link="Shared\CableNaming\%(Filename)%(Extension)" />
+    <Compile Include="..\EplanCipMvp.App\CableNumbering.cs" Link="Shared\CableNumbering.cs" />
+    <Compile Include="..\EplanCipMvp.App\CableNumberingSession.cs" Link="Shared\CableNumberingSession.cs" />
+    <Compile Include="..\EplanCipMvp.App\ReadExportFile.cs" Link="Shared\ReadExportFile.cs" />
+    <Compile Include="..\EplanCipMvp.Gui\CableNumberingPanel.cs" Link="Shared\CableNumberingPanel.cs" />
+    <Compile Include="..\EplanCipMvp.Gui\ExportDialog.cs" Link="Shared\ExportDialog.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Сборки EPLAN уже загружены в процесс EPLAN — не копируем (Private=False). -->
+    <Reference Include="Eplan.EplApi.AFu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.AFu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Baseu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Baseu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.DataModelu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.DataModelu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.HEServicesu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.HEServicesu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Eplan.EplApi.Guiu">
+      <HintPath>C:\Program Files\EPLAN\Platform\Bin\Eplan.EplApi.Guiu.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

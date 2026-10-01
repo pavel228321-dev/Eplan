@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EplanCipMvp</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  :root {
+    --accent: #2e6bd6;
+    --accent-dark: #1f4f9e;
+    --border: #dfe3e8;
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --warn: #b3261e;
+    --ok: #1a7f37;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  header img.logo {
+    height: 56px;
+    width: auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 14px;
+    flex: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  header p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  header .spacer { flex: 1 1 auto; }
+  button.help-btn {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: none;
+    white-space: nowrap;
+  }
+  button.help-btn:hover { background: rgba(255, 255, 255, 0.28); }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 32, 0.55);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: 10px;
+    max-width: 720px;
+    width: 100%;
+    padding: 26px 30px 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  }
+  .modal-box h2 { margin: 0 0 4px; font-size: 18px; }
+  .modal-box .modal-sub { color: var(--muted); font-size: 12.5px; margin: 0 0 18px; }
+  .modal-box h3 { font-size: 14px; margin: 18px 0 6px; color: var(--accent-dark); }
+  .modal-box p, .modal-box li { font-size: 13.5px; line-height: 1.55; color: var(--text); }
+  .modal-box ul, .modal-box ol { margin: 6px 0; padding-left: 20px; }
+  .modal-box .callout {
+    background: #fbf3e7;
+    border: 1px solid #f0dcb8;
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 16px;
+  }
+  .modal-close-row { text-align: right; margin-top: 20px; }
+  main {
+    max-width: 1020px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  }
+  .card h2 {
+    font-size: 15px;
+    margin: 0 0 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2 .step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    flex: none;
+  }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .field-row { display: flex; gap: 8px; }
+  .field input[type=text] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fbfcfd;
+  }
+  .field-row input[type=text] { flex: 1 1 auto; min-width: 0; }
+  .field input[type=text]:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+  }
+  button.browse {
+    background: #eef1f5;
+    color: var(--text);
+    font-weight: 500;
+    padding: 8px 14px;
+    white-space: nowrap;
+    flex: none;
+  }
+  button.browse:hover:not(:disabled) { background: #e2e6ec; }
+  .field .note {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--text);
+    margin: 2px 0 4px;
+  }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--accent-dark); }
+  button:disabled { background: #b7c3d6; cursor: not-allowed; }
+  button.danger { background: var(--warn); margin-left: 8px; }
+  button.danger:hover:not(:disabled) { background: #8f1f19; }
+  .reconcile-plan-item {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    background: #fafbfc;
+    font-size: 12.5px;
+  }
+  .reconcile-plan-item b { font-size: 13px; }
+  .reconcile-plan-item .delete-line {
+    color: var(--warn);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  #groupsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 6px 16px;
+    margin-bottom: 4px;
+  }
+  .group-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .group-check:hover { background: #f0f3f8; }
+  .group-check input { margin-top: 2px; }
+  .group-check .analogy { color: #a15c00; font-size: 11px; display: block; }
+  .no-donor-note {
+    font-size: 12px;
+    color: var(--muted);
+    background: #fbf3e7;
+    border: 1px solid #f0dcb8;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 10px 0 4px;
+  }
+  .table-wrap { overflow-x: auto; }
+  table.pump-params {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+  }
+  table.pump-params th, table.pump-params td {
+    border: 1px solid var(--border);
+    padding: 5px 8px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  table.pump-params th { background: #f0f3f8; font-weight: 600; }
+  #donorRows { margin: 10px 0; }
+  .donor-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    margin-bottom: 8px;
+    background: #fafbfc;
+  }
+  .donor-row b { font-size: 13px; min-width: 180px; }
+  .donor-row select {
+    flex: 1 1 320px;
+    min-width: 240px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12.5px;
+  }
+  .donor-row .sub-label { font-size: 11.5px; color: var(--muted); }
+  .donor-row .warn { color: var(--warn); font-size: 12.5px; }
+  #log {
+    width: 100%;
+    height: 320px;
+    font-family: Consolas, "SF Mono", monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #0f1720;
+    color: #d7e2ee;
+  }
+  .actions { margin-top: 4px; }
+  table.cables td input[type="text"] { width: 100%; min-width: 110px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; }
+  table.cables tr.conflict td { background: #fdecea; }
+  table.cables tr.norule td { color: var(--muted); }
+  table.cables td.note { white-space: normal; color: var(--warn); max-width: 320px; }
+  details.legacy { margin: 8px 0 14px; }
+  details.legacy > summary { cursor: pointer; color: var(--muted); font-size: 13px; padding: 6px 0; }
+  details.legacy[open] > summary { margin-bottom: 8px; }
+  .rules-toolbar, .cables-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <img class="logo" src="aprotec-logo.svg" alt="Aprotec Engineering">
+  <div>
+    <h1>EplanCipMvp</h1>
+    <p>Нумерация кабелей и жил в проекте EPLAN по правилам (сейчас — кабели). Прежняя генерация листов из доноров — в свёрнутых блоках ниже.</p>
+  </div>
+  <div class="spacer"></div>
+  <button type="button" class="help-btn" id="btnHelp">Как это работает?</button>
+</header>
+
+<div class="modal-overlay hidden" id="helpModal">
+  <div class="modal-box">
+    <h2>Как это работает</h2>
+    <p class="modal-sub">Кратко — что происходит между браузером, этой программой и EPLAN.</p>
+
+    <h3>Архитектура</h3>
+    <p>Браузер — это просто «пульт». Вся работа с EPLAN идёт в программе <code>EplanCipMvp.Web.exe</code>,
+      которая запущена на этом же компьютере и поднимает локальный сервер (<code>localhost:5177</code>).
+      Страница в браузере отправляет туда обычные запросы, а сервер сам подключается к установленной у вас
+      EPLAN через её собственный API (COM) и открывает нужные проекты.</p>
+    <p>Из этого следует: работает только пока запущен <code>EplanCipMvp.Web.exe</code> на этом же компьютере,
+      где стоит EPLAN; открыть страницу с другого компьютера бессмысленно — без локального сервера
+      на машине с EPLAN ничего не подключится.</p>
+
+    <h3>Нумерация кабелей (основное)</h3>
+    <p>Укажите папку Bin вашей EPLAN и проект (.elk), нажмите «Подключиться» — доноры и xlsx не нужны.
+      В карточке «Нумерация кабелей»: «Считать кабели» показывает все кабели проекта и имя, которое даст
+      первое подходящее правило; «Записать отмеченные» переименовывает только отмеченные строки (вместе с жилами),
+      затем перечитывает проект и сверяет результат. Первый прогон — на копии проекта. При любой ошибке
+      пришлите файл <code>EplanCipMvp.Web.log</code> рядом с программой.</p>
+
+    <h3>Генерация страниц из доноров (прежние функции)</h3>
+    <p>Всё, что ниже, относится к ним: поля донорских проектов и xlsx — в свёрнутом блоке на карточке подключения.</p>
+
+    <h3>Шаг 1 — Подключение</h3>
+    <p>По кнопке «Подключиться» сервер запускает API EPLAN и открывает указанные вами проекты:
+      донорские (1260, и при необходимости 1166 — источники готовых листов схем) и целевой (1364 — куда копируем).</p>
+    <p><b>Опционально — «Создать как полную копию донора 1» (Шаг 0):</b> если включить этот чекбокс и указать
+      путь для ещё НЕ существующего файла, сервер сначала скопирует донор 1 целиком (весь проект, не отдельные
+      листы) и откроет эту копию как целевой проект — вместо пустого проекта из шаблона. Если файл по указанному
+      пути уже есть, копирование пропускается, он просто открывается как есть. Схемы CIP-моек у разных объектов
+      обычно похожи, поэтому это может сразу дать бо́льшую часть содержимого «бесплатно» — а дальше Шаг 3
+      (ниже) приводит количество страниц и теги в соответствие с конкретным объектом.</p>
+
+    <h3>Шаг 2 — Типы устройств и донор-страницы</h3>
+    <p>Для каждого отмеченного типа устройства (насос с ПЧ, клапан, датчик, модуль ПЛК и т.д.) инструмент ищет
+      в доноре подходящие страницы-кандидаты и даёт выбрать нужную. Если точного совпадения нет, страница может
+      быть предложена «по аналогии» (с пометкой ⚠) — такие стоит перепроверить вручную после копирования.</p>
+
+    <h3>Копирование</h3>
+    <p>По кнопке «Скопировать» инструмент берёт выбранную донор-страницу и переносит её в целевой проект,
+      автоматически подстраивая: обозначения устройств (перетэговка под нумерацию 1364), артикулы
+      (если в целевом проекте другая модель/поставщик), адреса ПЛК и подобное — то есть не рисует схему
+      с нуля, а адаптирует уже готовую.</p>
+
+    <h3>Шаг 3 — Реконсиляция (после полного копирования)</h3>
+    <p>Если использовался Шаг 0, страницы группы устройств (насосы ПЧ, клапаны/датчики) уже физически есть
+      в целевом проекте — но под донорскими тегами, и их количество может не совпадать с реальным объектом.
+      «Показать план» считает, без изменений в проекте: сколько страниц есть, сколько нужно по спецификации,
+      что будет продублировано (если нужно больше) и что будет <b>удалено</b> (если нужно меньше). «Применить»
+      реально выполняет это — дублирует/удаляет/переименовывает — и активна только после того, как вы увидели
+      план для тех же отмеченных групп.</p>
+    <div class="callout">
+      Важно: удаление страниц (<code>Page.Remove()</code>) необратимо — это единственное разрушительное
+      действие во всей программе. Сначала внимательно смотрите список «будет удалено» в плане, и по возможности
+      пробуйте на резервной копии проекта, особенно первые несколько раз. Модули ПЛК (DP) в реконсиляцию пока
+      не входят — там один и тот же фильтр страниц покрывает и титульные листы, и детализацию, и программно
+      надёжно различить их среди уже существующих страниц нечем.
+    </div>
+
+    <h3>Таблица параметров ПЧ</h3>
+    <p>Отдельное необязательное поле на Шаге 1 — можно указать xlsx с параметрами насосов (модель ПЧ, наличие
+      пускателя, состав DI/DO/AI/AO, Profibus и т.п.). Сейчас это только чтение и предпросмотр (таблица
+      показывается ниже после подключения, чтобы проверить, что колонки распознаются верно) — на выбор
+      донор-страницы или на реконсиляцию эти данные пока не влияют. Это задел: следующий шаг — использовать
+      её как источник правды для автоматического подбора донор-страницы вместо ручного выбора.</p>
+
+    <div class="callout">
+      Важно: и обычное копирование, и реконсиляция подбирают/дублируют готовую страницу из уже существующих
+      вариантов — программа не рисует схему «с нуля». Если для нужной комбинации подходящей страницы нет ни
+      в донорах, ни в уже скопированном целевом проекте, такую страницу нужно дорисовать вручную.
+    </div>
+
+    <div class="modal-close-row"><button type="button" id="btnHelpClose">Понятно</button></div>
+  </div>
+</div>
+
+<main>
+
+  <section class="card">
+    <h2><span class="step">1</span> Подключение к проекту</h2>
+    <div class="two-col">
+      <div class="field">
+        <label>Папка Bin вашей EPLAN</label>
+        <div class="field-row">
+          <input type="text" id="binPath" value="C:\Program Files\EPLAN\Electric P8\2.9.4\Bin">
+          <button type="button" class="browse" data-target="binPath" data-type="folder">Обзор…</button>
+        </div>
+        <div class="note">Папка, где лежит W3u.exe (Electric P8\&lt;версия&gt;\Bin). Саму программу держите в Platform\&lt;версия&gt;\Bin — рядом с Eplan.EplApi.*u.dll.</div>
+      </div>
+      <div class="field">
+        <label>Проект EPLAN (.elk)</label>
+        <div class="field-row">
+          <input type="text" id="targetProject" placeholder="C:\...\1364_CIP.elk">
+          <button type="button" class="browse" id="btnBrowseTarget" data-target="targetProject" data-type="file" data-filter="EPLAN project (*.elk)|*.elk">Обзор…</button>
+        </div>
+        <div class="note" id="targetProjectNote">Существующий проект. Путь можно вставить и вручную. Первый прогон нумерации — на копии проекта.</div>
+      </div>
+    </div>
+
+    <details class="legacy">
+      <summary>Генерация страниц из доноров (прежние функции) — эти поля нужны только для неё</summary>
+      <div class="two-col">
+      <div class="field">
+        <label>Спецификация (xlsx)</label>
+        <div class="field-row">
+          <input type="text" id="xlsxPath" placeholder="C:\...\1364-Сводная_специфкация_изделий.xlsx">
+          <button type="button" class="browse" data-target="xlsxPath" data-type="file" data-filter="Excel (*.xlsx)|*.xlsx">Обзор…</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Проект-донор 1 (1260, .elk)</label>
+        <div class="field-row">
+          <input type="text" id="sourceProject1" placeholder="C:\...\1260_Milk storage site.elk">
+          <button type="button" class="browse" data-target="sourceProject1" data-type="file" data-filter="EPLAN project (*.elk)|*.elk">Обзор…</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Проект-донор 2 (1166, опционально, .elk)</label>
+        <div class="field-row">
+          <input type="text" id="sourceProject2" placeholder="нужен только для GS">
+          <button type="button" class="browse" data-target="sourceProject2" data-type="file" data-filter="EPLAN project (*.elk)|*.elk">Обзор…</button>
+        </div>
+        <div class="note">Нужен только для групп, чей донор реально лежит в 1166 (сейчас — датчики люков GS). Остальные группы используют донор 1.</div>
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label class="checkbox-row">
+          <input type="checkbox" id="createAsFullCopy">
+          Создать проект (поле «Проект EPLAN» выше) как полную копию донора 1 (Шаг 0) — если файла по этому пути ещё нет
+        </label>
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label>Таблица параметров ПЧ (xlsx, опционально — задел на будущее)</label>
+        <div class="field-row">
+          <input type="text" id="pumpParamsXlsxPath" placeholder="необязательно — пока только читается и показывается для проверки">
+          <button type="button" class="browse" data-target="pumpParamsXlsxPath" data-type="file" data-filter="Excel (*.xlsx)|*.xlsx">Обзор…</button>
+        </div>
+        <div class="note">Пока эта таблица ни на что не влияет — программа только читает и показывает её ниже, чтобы можно было проверить, что колонки распознаются верно, пока вы её заполняете.</div>
+      </div>
+      </div>
+    </details>
+    <div class="actions"><button id="btnConnect">Подключиться</button></div>
+  </section>
+
+  <section class="card hidden" id="cablesCard">
+    <h2><span class="step">2</span> Нумерация кабелей</h2>
+    <div class="no-donor-note">
+      Правила проверяются сверху вниз, срабатывает первое подходящее. Пустое поле условия — «любое»; в масках * — любые символы, ? — один, # — цифра.
+      Подстановки: {Устройство}, {Устройство:от_цифры}, {МестоИсточника}, {МестоЦели}, {ШкафИсточника}, {ШкафИсточника:2}, {.N} (суффикс .1/.2, только если кабелей к устройству больше одного).
+      <b>Первый прогон делайте на копии проекта.</b>
+    </div>
+    <div class="table-wrap">
+      <table class="pump-params cables" id="rulesTable">
+        <thead><tr><th>Вкл</th><th>Название</th><th>Место источника</th><th>Место цели</th><th>Тип содержит</th><th>Жил</th><th>Устройство цели</th><th>Шаблон</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="rules-toolbar">
+      <button type="button" id="btnRuleAdd">Добавить правило</button>
+      <button type="button" id="btnRulesSave">Сохранить правила</button>
+      <button type="button" id="btnRulesReset">Сбросить к пресету 1260</button>
+    </div>
+    <div class="cables-toolbar">
+      <button type="button" id="btnCablesRead">Считать кабели</button>
+      <button type="button" id="btnCablesPreview" disabled>Пересчитать по правилам</button>
+      <button type="button" id="btnCablesApply" class="danger" disabled>Записать отмеченные</button>
+      <button type="button" id="btnCablesExport" disabled>Сохранить выгрузку…</button>
+    </div>
+    <div id="cablesSummary"></div>
+    <div class="table-wrap">
+      <table class="pump-params cables" id="cablesTable">
+        <thead><tr><th>✓</th><th>Сейчас</th><th>Источник</th><th>Цель</th><th>Тип / жил</th><th>Правило</th><th>Новое имя</th><th>Статус</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card hidden" id="wiresCard">
+    <h2><span class="step">3</span> Нумерация жил и проводов</h2>
+    <div class="no-donor-note">
+      Строка = узел (провода с общим контактом получают один номер). Правила сверху вниз, первое подходящее;
+      маски опорного конца — место/устройство/клемма, несколько масок через «;» (* — любые символы, ? — один, # — цифра).
+      Подстановки: {Устройство}, {Устройство:от_цифры}, {Клемма}, {Клемма:2}, {Клемма:буквы}, {МодульПЛК:цифры}, {Группа}, {Номер:последняя}, {Потенциал}, {Потенциал:источник} (достраивает номер по маске «Источник», если EPLAN дал только букву), {Счётчик}.
+      Жилы кабелей назначаются из артикула кабеля. <b>Первый прогон делайте на копии проекта.</b>
+    </div>
+    <div class="table-wrap">
+      <table class="pump-params cables" id="wireRulesTable">
+        <thead><tr><th>Вкл</th><th>Название</th><th>Место</th><th>Устройство</th><th>Клемма</th><th>Место др. конца</th><th>Кроме устройств</th><th>Потенциал (да/нет)</th><th>Жила (да/нет)</th><th>Источник</th><th>Порядок X/Y</th><th>Счётчик с</th><th>Отмечать сами (да/нет)</th><th>Шаблон</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="rules-toolbar">
+      <button type="button" id="btnWireRuleAdd">Добавить правило</button>
+      <button type="button" id="btnWireRulesSave">Сохранить правила</button>
+      <button type="button" id="btnWireRulesReset">Сбросить к пресету 1260</button>
+    </div>
+    <div class="cables-toolbar">
+      <button type="button" id="btnWiresRead">Считать провода</button>
+      <button type="button" id="btnWiresPreview" disabled>Пересчитать по правилам</button>
+      <button type="button" id="btnWiresApply" class="danger" disabled>Записать отмеченные</button>
+      <button type="button" id="btnWiresExport" disabled>Сохранить выгрузку…</button>
+      <button type="button" id="btnWiresRestore">Восстановить номера из файла…</button>
+      <input type="file" id="fileWiresRestore" accept=".tsv,.txt" hidden>
+      <label><input type="checkbox" id="chkPlacePoints"> Ставить новые точки определения (где их нет)</label>
+    </div>
+    <div id="wiresSummary"></div>
+    <div class="table-wrap">
+      <table class="pump-params cables" id="wiresTable">
+        <thead><tr><th>✓</th><th>Лист</th><th>Подключён к</th><th>Потенциал</th><th>Кабель / жила</th><th>Сейчас</th><th>Правило</th><th>Новый номер</th><th>Статус</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="legacy hidden" id="legacyBlock">
+    <summary>Генерация страниц из доноров: типы устройств, реконсиляция, таблица ПЧ</summary>
+
+  <section class="card hidden" id="pumpParamsCard">
+    <h2>Таблица параметров ПЧ (предпросмотр)</h2>
+    <div class="no-donor-note">Пока это только предпросмотр того, что программа прочитала из файла — на выбор донор-страниц эти данные ещё не влияют (задел на будущее).</div>
+    <div class="table-wrap">
+      <table class="pump-params">
+        <thead>
+          <tr>
+            <th>#</th><th>Тег</th><th>Модель ПЧ</th><th>Характеристики</th><th>Автомат</th>
+            <th>Пускатель</th><th>Пуск DI</th><th>ОС DO</th><th>Задание AI</th><th>ОС AO</th>
+            <th>Прогр. DI</th><th>Profibus</th><th>Модель двиг.</th><th>Характ. двиг.</th>
+            <th>Темп. ОС</th><th>Фазы</th>
+          </tr>
+        </thead>
+        <tbody id="pumpParamsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card hidden" id="groupsBlock">
+    <h2><span class="step">2</span> Типы устройств и донорские страницы</h2>
+    <div id="groupsList"></div>
+    <div class="no-donor-note" id="noDonorNote"></div>
+    <div id="donorRows"></div>
+    <div class="actions"><button id="btnCopy" disabled>Скопировать для всех отмеченных типов</button></div>
+  </section>
+
+  <section class="card hidden" id="reconcileCard">
+    <h2><span class="step">3</span> Реконсиляция после полного копирования</h2>
+    <div class="no-donor-note">
+      Приводит количество УЖЕ СУЩЕСТВУЮЩИХ страниц группы в целевом проекте в соответствие со спецификацией:
+      где по спецификации устройств больше — дублирует существующую страницу внутри проекта; где меньше —
+      <b>удаляет лишние страницы (необратимо, Page.Remove)</b>; везде — переименовывает теги. Модули ПЛК (DP)
+      сюда пока не входят (см. кнопку «Как это работает?»). Сначала «Показать план» — «Применить» станет
+      доступна только после этого, для тех же отмеченных групп, и только пока вы их не поменяли.
+    </div>
+    <div id="reconcileGroupsList"></div>
+    <div class="actions">
+      <button id="btnReconcilePreview">Показать план</button>
+      <button id="btnReconcileApply" class="danger" disabled>Применить план</button>
+    </div>
+    <div id="reconcilePlanOutput"></div>
+  </section>
+  </details>
+
+
+  <section class="card">
+    <h2>Лог</h2>
+    <div id="log"></div>
+  </section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
