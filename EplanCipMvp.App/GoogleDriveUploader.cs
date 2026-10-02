@@ -22,6 +22,14 @@ namespace EplanCipMvp.App
 
         public GoogleDriveUploader(string serviceAccountKeyPath, string folderId)
         {
+            // 02.10.2026: File.Exists на относительном пути смотрит в ТЕКУЩУЮ РАБОЧУЮ
+            // ДИРЕКТОРИЮ процесса, а не в папку exe — это разные вещи в .NET, и для GUI,
+            // запущенного не из своей папки, они разошлись (appsettings.json при этом
+            // находился нормально, т.к. его грузят с явным SetBasePath(BaseDirectory)).
+            // Приводим относительный путь к папке exe, как и конфиг.
+            if (!Path.IsPathRooted(serviceAccountKeyPath))
+                serviceAccountKeyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, serviceAccountKeyPath);
+
             if (!File.Exists(serviceAccountKeyPath))
                 throw new FileNotFoundException(
                     $"Ключ сервисного аккаунта не найден: {serviceAccountKeyPath}. " +
