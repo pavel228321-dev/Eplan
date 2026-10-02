@@ -17,6 +17,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2" />
+    <!-- 02.10.2026: для команды "export-all" — заливка полной вычитки проекта на Google Drive
+         от имени сервисного аккаунта (не личный OAuth). -->
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3533" />
+    <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +34,13 @@
       appsettings.json, если нужно — Program.cs подхватит его сам, если он есть.
     -->
     <None Include="appsettings.Local.json" Condition="Exists('appsettings.Local.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!--
+      02.10.2026: JSON-ключ сервисного аккаунта Google Drive (команда "export-all").
+      НЕ коммитится (см. .gitignore) — положить вручную рядом с exe.
+    -->
+    <None Include="drive-service-account.json" Condition="Exists('drive-service-account.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -18,6 +18,18 @@ namespace EplanCipMvp.App
         public PageStructureSettings PageStructure { get; set; } = new PageStructureSettings();
         public VfdComponentDefaults VfdDefaults { get; set; } = new VfdComponentDefaults();
         public DeviceDefaultsSettings DeviceDefaults { get; set; } = new DeviceDefaultsSettings();
+        public GoogleDriveSettings GoogleDrive { get; set; } = new GoogleDriveSettings();
+    }
+
+    /// <summary>
+    /// Куда грузить полную вычитку проекта (команда "export-all"). FolderId — не
+    /// секрет, можно коммитить. ServiceAccountKeyPath — путь к JSON-ключу сервисного
+    /// аккаунта; сам файл в git НЕ попадает (см. .gitignore), кладётся рядом с exe вручную.
+    /// </summary>
+    public class GoogleDriveSettings
+    {
+        public string FolderId { get; set; } = "1BJFWlJhIrVHDucGIZfCg6xAvUhGKaQ7r";
+        public string ServiceAccountKeyPath { get; set; } = "drive-service-account.json";
     }
 
     /// <summary>

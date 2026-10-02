@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Eplan.EplApi.DataModel;
 using Eplan.EplApi.Starter;
@@ -20,6 +21,17 @@ namespace EplanCipMvp.App
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             var settings = LoadSettings();
+
+            // 02.10.2026: "export-all" — отдельная команда (полная вычитка проекта +
+            // заливка на Google Drive), не трогает основной пайплайн нумерации модулей
+            // ниже. Вызов: EplanCipMvp.exe export-all [путь_к_проекту].
+            if (args.Length > 0 && args[0] == "export-all")
+            {
+                string exportProjectPath = args.Length > 1 ? args[1] : settings.Eplan.ProjectPath;
+                RunExportAll(settings, exportProjectPath);
+                return;
+            }
+
             // Единый источник истины для "какой шкаф с ЦП" — PlcHardware.CpuCabinet;
             // ModuleGrouper нужен тот же факт, чтобы дать этой станции номер "1".
             settings.Grouping.CpuCabinet = settings.PlcHardware.CpuCabinet;
@@ -92,6 +104,63 @@ namespace EplanCipMvp.App
             project.Close();
 
             Console.WriteLine("Готово.");
+        }
+
+        /// <summary>Полная вычитка проекта (устройства/артикулы, PLC-адреса, провода,
+        /// кабели, страницы) -> локальная папка с JSON-файлами -> заливка на Google Drive
+        /// (отдельный сервисный аккаунт, не личный OAuth пользователя).</summary>
+        private static void RunExportAll(AppSettings settings, string projectPath)
+        {
+            Console.WriteLine("=== export-all: подключение к EPLAN ===");
+            Console.WriteLine($"  Проект: {projectPath}");
+
+            var resolver = new AssemblyResolver();
+            resolver.SetEplanBinPath(settings.Eplan.BinPath);
+            var app = new EplApplication();
+            app.EplanBinFolder = settings.Eplan.BinPath;
+            app.Init("", true, false);
+
+            var projectManager = new ProjectManager();
+            var project = projectManager.OpenProject(projectPath);
+
+            Core.ProjectExport.ProjectExportBundle bundle;
+            try
+            {
+                bundle = ProjectExporter.ExportAll(project, msg => Console.WriteLine("  " + msg));
+            }
+            finally
+            {
+                project.Close();
+            }
+
+            Console.WriteLine($"\n=== Готово: {bundle.Manifest.DeviceCount} устройств, " +
+                               $"{bundle.Manifest.PlcAddressCount} PLC-адресов, {bundle.Manifest.WireCount} проводов, " +
+                               $"{bundle.Manifest.CableCount} кабелей, {bundle.Manifest.PageCount} страниц ===");
+
+            string outDir = Path.Combine(Path.GetTempPath(), "EplanCipMvp-export-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            Directory.CreateDirectory(outDir);
+            WriteJson(Path.Combine(outDir, "manifest.json"), bundle.Manifest);
+            WriteJson(Path.Combine(outDir, "devices.json"), bundle.Devices);
+            WriteJson(Path.Combine(outDir, "plc-addresses.json"), bundle.PlcAddresses);
+            WriteJson(Path.Combine(outDir, "wires.json"), bundle.Wires);
+            WriteJson(Path.Combine(outDir, "cables.json"), bundle.Cables);
+            WriteJson(Path.Combine(outDir, "pages.json"), bundle.Pages);
+            Console.WriteLine($"Файлы сохранены локально: {outDir}");
+
+            Console.WriteLine("\n=== Заливка на Google Drive ===");
+            var uploader = new GoogleDriveUploader(settings.GoogleDrive.ServiceAccountKeyPath, settings.GoogleDrive.FolderId);
+            string link = uploader.UploadFolder(outDir, msg => Console.WriteLine("  " + msg));
+            Console.WriteLine($"Готово: {link}");
+        }
+
+        private static void WriteJson<T>(string path, T data)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            };
+            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(data, options), System.Text.Encoding.UTF8);
         }
 
         private static AppSettings LoadSettings()
