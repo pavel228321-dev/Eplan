@@ -49,6 +49,7 @@ namespace EplanCipMvp.Gui
         private Panel _pnlGroupDonors;
         private Button _btnConnect;
         private Button _btnCopy;
+        private Button _btnExportAll;
         private TextBox _txtLog;
 
         // 23.09.2026: вкладка «Нумерация кабелей» — общая с надстройкой EPLAN панель (CableNumberingPanel).
@@ -234,6 +235,7 @@ namespace EplanCipMvp.Gui
 
             var tabs = new TabControl { Dock = DockStyle.Fill };
             var tabCables = new TabPage("Нумерация кабелей");
+            var tabExport = new TabPage("Экспорт на Google Drive");
             var tabLegacy = new TabPage("Генерация листов из доноров (прежние функции)");
             _cablesPanel = new CableNumberingPanel(ReadCables, PreviewCables, ApplyCableNames, Log,
                 AppPaths.UserFile("cable-numbering-rules.json"), ExportCables);
@@ -245,8 +247,10 @@ namespace EplanCipMvp.Gui
             _wiresPanel.CanRead = false;
             tabWires.Controls.Add(_wiresPanel);
             BuildLegacyTab(tabLegacy);
+            BuildExportTab(tabExport);
             tabs.TabPages.Add(tabCables);
             tabs.TabPages.Add(tabWires);
+            tabs.TabPages.Add(tabExport);
             tabs.TabPages.Add(tabLegacy);
 
             _txtLog = new TextBox
@@ -329,6 +333,48 @@ namespace EplanCipMvp.Gui
             layout.RowCount++;
 
             page.Controls.Add(layout);
+        }
+
+        /// <summary>02.10.2026: пользователь попросил кнопку в GUI вместо отдельного консольного
+        /// запуска export-all — у консоли своя офлайн-инициализация EPLAN падает с
+        /// "$(CFG_VARIANT)\install.xml doesn't exist!" (похоже, это специфично для чистого
+        /// консольного процесса), а GUI уже стабильно подключается через "Подключиться".
+        /// Переиспользуем _eplan.TargetProject — то же готовое подключение, никакой повторной
+        /// инициализации EPLAN.</summary>
+        private void BuildExportTab(TabPage page)
+        {
+            var layout = NewFieldsLayout(DockStyle.Top);
+            AddNoteLabel(layout, "Полная вычитка подключённого проекта (устройства/артикулы, PLC-адреса, " +
+                                  "провода, кабели, страницы) — в JSON, с заливкой на Google Drive. " +
+                                  "Сначала нажмите «Подключиться» выше (поле «Проект EPLAN»).");
+
+            _btnExportAll = new Button { Text = "Экспортировать на Google Drive", AutoSize = true, Margin = new Padding(0, 8, 0, 8) };
+            _btnExportAll.Click += BtnExportAll_Click;
+            layout.Controls.Add(_btnExportAll, 1, layout.RowCount);
+            layout.RowCount++;
+
+            page.Controls.Add(layout);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void BtnExportAll_Click(object sender, EventArgs e)
+        {
+            if (_eplan == null || _eplan.TargetProject == null)
+            {
+                Log("Сначала нажмите «Подключиться» (нужен открытый проект EPLAN).");
+                return;
+            }
+            try
+            {
+                Log("Экспортирую проект...");
+                var settings = AppSettings.Load();
+                string link = ProjectExporter.ExportAllAndUpload(_eplan.TargetProject, settings.GoogleDrive, Log);
+                Log("Готово: " + link);
+            }
+            catch (Exception ex)
+            {
+                Log("ОШИБКА: " + ex);
+            }
         }
 
         private TextBox AddRow(TableLayoutPanel layout, string label, out Button browseButton)

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using EplanCipMvp.Core;
 using EplanCipMvp.Core.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace EplanCipMvp.App
 {
@@ -10,6 +12,21 @@ namespace EplanCipMvp.App
     /// </summary>
     public class AppSettings
     {
+        /// <summary>02.10.2026: общий загрузчик для Program.cs (консоль) и MainForm.cs (GUI,
+        /// вкладка "Экспорт на Google Drive") — один и тот же appsettings.json/.Local.json.</summary>
+        public static AppSettings Load()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+                .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
+
+            var config = builder.Build();
+            var settings = new AppSettings();
+            config.Bind(settings);
+            return settings;
+        }
+
         public EplanSettings Eplan { get; set; } = new EplanSettings();
         public SpecSettings Spec { get; set; } = new SpecSettings();
         public PlcHardwareSettings PlcHardware { get; set; } = new PlcHardwareSettings();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Eplan.EplApi.DataModel;
 using EplanCipMvp.Core.ProjectExport;
@@ -17,6 +18,43 @@ namespace EplanCipMvp.App
     /// </summary>
     public static class ProjectExporter
     {
+        /// <summary>02.10.2026: общая точка входа для консоли (Program.RunExportAllConnected)
+        /// и GUI (MainForm, кнопка "Экспортировать на Google Drive") — один и тот же код,
+        /// не дублируем. Project уже должен быть открыт вызывающей стороной (так у GUI уже
+        /// есть готовое, проверенное подключение через _eplan.TargetProject — используем его
+        /// вместо повторной офлайн-инициализации EPLAN, которая в консоли падает с
+        /// "$(CFG_VARIANT)\install.xml doesn't exist!").</summary>
+        public static string ExportAllAndUpload(Project project, GoogleDriveSettings driveSettings, Action<string> log)
+        {
+            var bundle = ExportAll(project, log);
+            log($"Готово: {bundle.Manifest.DeviceCount} устройств, {bundle.Manifest.PlcAddressCount} PLC-адресов, " +
+                $"{bundle.Manifest.WireCount} проводов, {bundle.Manifest.CableCount} кабелей, {bundle.Manifest.PageCount} страниц.");
+
+            string outDir = Path.Combine(Path.GetTempPath(), "EplanCipMvp-export-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+            Directory.CreateDirectory(outDir);
+            WriteJson(Path.Combine(outDir, "manifest.json"), bundle.Manifest);
+            WriteJson(Path.Combine(outDir, "devices.json"), bundle.Devices);
+            WriteJson(Path.Combine(outDir, "plc-addresses.json"), bundle.PlcAddresses);
+            WriteJson(Path.Combine(outDir, "wires.json"), bundle.Wires);
+            WriteJson(Path.Combine(outDir, "cables.json"), bundle.Cables);
+            WriteJson(Path.Combine(outDir, "pages.json"), bundle.Pages);
+            log($"Файлы сохранены локально: {outDir}");
+
+            log("Заливка на Google Drive...");
+            var uploader = new GoogleDriveUploader(driveSettings.ServiceAccountKeyPath, driveSettings.FolderId);
+            return uploader.UploadFolder(outDir, msg => log("  " + msg));
+        }
+
+        private static void WriteJson<T>(string path, T data)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            };
+            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(data, options), System.Text.Encoding.UTF8);
+        }
+
         public static ProjectExportBundle ExportAll(Project project, Action<string> log)
         {
             var bundle = new ProjectExportBundle

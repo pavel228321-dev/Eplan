@@ -6,7 +6,6 @@ using Eplan.EplApi.DataModel;
 using Eplan.EplApi.Starter;
 using Eplan.EplApi.System;
 using EplanCipMvp.Core;
-using Microsoft.Extensions.Configuration;
 
 namespace EplanCipMvp.App
 {
@@ -148,58 +147,19 @@ namespace EplanCipMvp.App
             var projectManager = new ProjectManager();
             var project = projectManager.OpenProject(projectPath);
 
-            Core.ProjectExport.ProjectExportBundle bundle;
+            string link;
             try
             {
-                bundle = ProjectExporter.ExportAll(project, msg => Console.WriteLine("  " + msg));
+                link = ProjectExporter.ExportAllAndUpload(project, settings.GoogleDrive, msg => Console.WriteLine("  " + msg));
             }
             finally
             {
                 project.Close();
             }
-
-            Console.WriteLine($"\n=== Готово: {bundle.Manifest.DeviceCount} устройств, " +
-                               $"{bundle.Manifest.PlcAddressCount} PLC-адресов, {bundle.Manifest.WireCount} проводов, " +
-                               $"{bundle.Manifest.CableCount} кабелей, {bundle.Manifest.PageCount} страниц ===");
-
-            string outDir = Path.Combine(Path.GetTempPath(), "EplanCipMvp-export-" + Guid.NewGuid().ToString("N").Substring(0, 8));
-            Directory.CreateDirectory(outDir);
-            WriteJson(Path.Combine(outDir, "manifest.json"), bundle.Manifest);
-            WriteJson(Path.Combine(outDir, "devices.json"), bundle.Devices);
-            WriteJson(Path.Combine(outDir, "plc-addresses.json"), bundle.PlcAddresses);
-            WriteJson(Path.Combine(outDir, "wires.json"), bundle.Wires);
-            WriteJson(Path.Combine(outDir, "cables.json"), bundle.Cables);
-            WriteJson(Path.Combine(outDir, "pages.json"), bundle.Pages);
-            Console.WriteLine($"Файлы сохранены локально: {outDir}");
-
-            Console.WriteLine("\n=== Заливка на Google Drive ===");
-            var uploader = new GoogleDriveUploader(settings.GoogleDrive.ServiceAccountKeyPath, settings.GoogleDrive.FolderId);
-            string link = uploader.UploadFolder(outDir, msg => Console.WriteLine("  " + msg));
-            Console.WriteLine($"Готово: {link}");
+            Console.WriteLine($"\n=== Готово: {link} ===");
         }
 
-        private static void WriteJson<T>(string path, T data)
-        {
-            var options = new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-            };
-            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(data, options), System.Text.Encoding.UTF8);
-        }
-
-        private static AppSettings LoadSettings()
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-                .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: false);
-
-            var config = builder.Build();
-            var settings = new AppSettings();
-            config.Bind(settings);
-            return settings;
-        }
+        private static AppSettings LoadSettings() => AppSettings.Load();
 
         /// <summary>
         /// Сверяет то, что реально насчитал ModuleGrouper по актуальной спецификации,
