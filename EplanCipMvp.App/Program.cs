@@ -129,7 +129,11 @@ namespace EplanCipMvp.App
 
             var app = new EplApplication();
             app.EplanBinFolder = settings.Eplan.BinPath;
-            app.Init("", true, false);
+            // 02.10.2026: true (не false) для bAllowCallingLoginDialog — как в EplanCipMvp.Gui
+            // (MainForm.cs:432, уже проверено живым запуском). С false консоль падала с
+            // "Necessary XML-file $(CFG_VARIANT)\install.xml doesn't exist!" — похоже, именно
+            // диалог входа разрешает эту переменную; без него EPLAN её не подставляет.
+            app.Init("", true, true);
 
             var projectManager = new ProjectManager();
             var project = projectManager.OpenProject(projectPath);
