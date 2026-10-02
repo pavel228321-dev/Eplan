@@ -55,7 +55,10 @@ namespace EplanCipMvp.App
                 WriteIndented = true,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             };
-            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(data, options), System.Text.Encoding.UTF8);
+            // 02.10.2026: обычный Encoding.UTF8 пишет BOM в начале файла — ломает некоторые
+            // JSON-парсеры (напр. Python json.load без encoding='utf-8-sig'). UTF8Encoding(false).
+            var utf8NoBom = new System.Text.UTF8Encoding(false);
+            File.WriteAllText(path, System.Text.Json.JsonSerializer.Serialize(data, options), utf8NoBom);
         }
 
         public static ProjectExportBundle ExportAll(Project project, Action<string> log)
@@ -86,7 +89,7 @@ namespace EplanCipMvp.App
                 Name = w.CurrentName,
                 Potential = w.Potential,
                 Cable = w.Cable,
-                Page = w.Page >= 0 && w.Page < bundle.Pages.Count ? bundle.Pages[w.Page].Identifier : "",
+                Page = w.Page >= 0 && w.Page < bundle.Pages.Count ? bundle.Pages[w.Page].Name : "",
                 StartDevice = w.Start.Device,
                 StartTerminal = w.Start.Terminal,
                 EndDevice = w.End.Device,
@@ -136,8 +139,13 @@ namespace EplanCipMvp.App
 
         /// <summary>Устройства группируем по FUNC_DEVICETAG_MAINNAME (та же точка входа,
         /// что уже используют DeviceGroupPageCopier.cs/PlcModulePageCopier.cs/VfdPageCopier.cs) —
-        /// одно физическое устройство обычно состоит из нескольких Function (катушка+контакты),
-        /// артикул берём с первой функции, где он заполнен.</summary>
+        /// одно физическое устройство обычно состоит из нескольких Function (катушка+контакты).
+        /// 02.10.2026: артикул — НЕ плоское свойство Function (первая версия читала
+        /// Properties.Function.FUNC_ARTICLE_* и получала пустые строки везде, подтверждено
+        /// живым прогоном даже на PLCBox с заведомо реальным артикулом Siemens). Правильный
+        /// путь — Function.Articles[] (коллекция объектов Article), а у Article — СВОЙ набор
+        /// констант Properties.Article.* (не Properties.Function.*), подтверждено рефлексией
+        /// сборки (ArticlePropertyList.get_Property(Properties.Article)).</summary>
         private static List<DeviceExport> ReadDevices(Project project, Action<string> log)
         {
             var result = new List<DeviceExport>();
@@ -149,17 +157,22 @@ namespace EplanCipMvp.App
             {
                 try
                 {
-                    var withArticle = group.FirstOrDefault(f =>
-                        ReadString(() => f.Properties[Properties.Function.FUNC_ARTICLE_PARTNR]).Length > 0)
-                        ?? group.First();
+                    Article article = null;
+                    Function withArticle = null;
+                    foreach (var f in group)
+                    {
+                        var articles = f.Articles;
+                        if (articles != null && articles.Length > 0) { article = articles[0]; withArticle = f; break; }
+                    }
+                    withArticle = withArticle ?? group.First();
 
                     result.Add(new DeviceExport
                     {
                         Designation = group.Key,
-                        Article = ReadString(() => withArticle.Properties[Properties.Function.FUNC_ARTICLE_PARTNR]),
-                        Manufacturer = ReadString(() => withArticle.Properties[Properties.Function.FUNC_ARTICLE_MANUFACTURER]),
-                        OrderNumber = ReadString(() => withArticle.Properties[Properties.Function.FUNC_ARTICLE_ORDERNR]),
-                        Description = ReadString(() => withArticle.Properties[Properties.Function.FUNC_ARTICLE_DESCR1]),
+                        Article = article != null ? ReadString(() => article.PartNr) : "",
+                        Manufacturer = article != null ? ReadString(() => article.Properties[Properties.Article.ARTICLE_MANUFACTURER_NAME]) : "",
+                        OrderNumber = article != null ? ReadString(() => article.Properties[Properties.Article.ARTICLE_ORDERNR]) : "",
+                        Description = article != null ? ReadString(() => article.Properties[Properties.Article.ARTICLE_DESCR1]) : "",
                         Category = ReadString(() => withArticle.Category.ToString()),
                         Page = ReadString(() => withArticle.Page?.Name ?? ""),
                     });
