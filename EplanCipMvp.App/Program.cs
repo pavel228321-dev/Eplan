@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Eplan.EplApi.DataModel;
 using Eplan.EplApi.Starter;
 using Eplan.EplApi.System;
@@ -127,12 +128,21 @@ namespace EplanCipMvp.App
             }
             EplanBootstrap.PinOnce(settings.Eplan.BinPath);
 
+            // 02.10.2026: ловушка №3 из EplanBootstrap.cs — PinOnce должен отработать ДО
+            // JIT-компиляции любого метода, упоминающего типы EPLAN. Если весь код ниже
+            // (new EplApplication, Init, ProjectManager...) лежит в ЭТОМ ЖЕ методе, JIT
+            // компилирует его целиком ДО выполнения строки PinOnce выше — отсюда падение
+            // "$(CFG_VARIANT)\install.xml doesn't exist!" (как и в EplanCipMvp.Gui,
+            // MainForm.cs:417-418, вызов вынесен в отдельный NoInlining-метод).
+            RunExportAllConnected(settings, projectPath);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void RunExportAllConnected(AppSettings settings, string projectPath)
+        {
             var app = new EplApplication();
             app.EplanBinFolder = settings.Eplan.BinPath;
-            // 02.10.2026: true (не false) для bAllowCallingLoginDialog — как в EplanCipMvp.Gui
-            // (MainForm.cs:432, уже проверено живым запуском). С false консоль падала с
-            // "Necessary XML-file $(CFG_VARIANT)\install.xml doesn't exist!" — похоже, именно
-            // диалог входа разрешает эту переменную; без него EPLAN её не подставляет.
+            // true (не false) для bAllowCallingLoginDialog — как в EplanCipMvp.Gui (MainForm.cs:432).
             app.Init("", true, true);
 
             var projectManager = new ProjectManager();
