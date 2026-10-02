@@ -114,8 +114,19 @@ namespace EplanCipMvp.App
             Console.WriteLine("=== export-all: подключение к EPLAN ===");
             Console.WriteLine($"  Проект: {projectPath}");
 
-            var resolver = new AssemblyResolver();
-            resolver.SetEplanBinPath(settings.Eplan.BinPath);
+            // 02.10.2026: раньше здесь была "сырая" инициализация (как в начале Main) —
+            // она ловит "The Variant ... is not valid", если BinPath указывает на
+            // Platform\<версия>\Bin вместо папки варианта (Electric P8\<версия>\Bin,
+            // где лежит W3u.exe). EplanBootstrap.PinOnce — уже проверенный живым
+            // запуском способ (тот же, что использует EplanCipMvp.Gui), переиспользуем его.
+            string binPathError = EplanBootstrap.CheckBinPath(settings.Eplan.BinPath);
+            if (binPathError != null)
+            {
+                Console.WriteLine("ОШИБКА: " + binPathError);
+                return;
+            }
+            EplanBootstrap.PinOnce(settings.Eplan.BinPath);
+
             var app = new EplApplication();
             app.EplanBinFolder = settings.Eplan.BinPath;
             app.Init("", true, false);
