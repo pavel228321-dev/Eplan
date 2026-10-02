@@ -39,14 +39,17 @@ namespace EplanCipMvp.App
     }
 
     /// <summary>
-    /// Куда грузить полную вычитку проекта (команда "export-all"). FolderId — не
-    /// секрет, можно коммитить. ServiceAccountKeyPath — путь к JSON-ключу сервисного
-    /// аккаунта; сам файл в git НЕ попадает (см. .gitignore), кладётся рядом с exe вручную.
+    /// Куда грузить полную вычитку проекта (команда "export-all"). FolderId — не секрет,
+    /// можно коммитить. CredentialsPath — файл OAuth client ID (тип "Desktop app" в Google
+    /// Cloud Console, НЕ сервисный аккаунт — у сервисных аккаунтов нет квоты на обычном
+    /// личном Диске, см. комментарий в GoogleDriveUploader.cs). Сам файл в git НЕ попадает
+    /// (см. .gitignore), кладётся рядом с exe вручную. Первый запуск откроет браузер для
+    /// входа — дальше токен кэшируется в %APPDATA%\EplanCipMvp (AppPaths.DataDir).
     /// </summary>
     public class GoogleDriveSettings
     {
         public string FolderId { get; set; } = "1BJFWlJhIrVHDucGIZfCg6xAvUhGKaQ7r";
-        public string ServiceAccountKeyPath { get; set; } = "drive-service-account.json";
+        public string CredentialsPath { get; set; } = "google-oauth-client.json";
     }
 
     /// <summary>

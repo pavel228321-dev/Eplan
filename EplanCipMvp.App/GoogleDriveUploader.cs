@@ -1,46 +1,57 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
+using Google.Apis.Upload;
+using Google.Apis.Util.Store;
 using DriveFile = Google.Apis.Drive.v3.Data.File;
 
 namespace EplanCipMvp.App
 {
     /// <summary>
-    /// 02.10.2026: заливка результата "export-all" на Google Drive от имени отдельного
-    /// сервисного аккаунта (не личный OAuth), расшаренного только на одну целевую папку
-    /// (settings.GoogleDrive.FolderId). Ключ — внешний файл, в git не попадает (см. .gitignore).
-    /// Скоуп — узкий DriveFile (доступ только к файлам, созданным самим приложением/расшаренным
-    /// на него), а не полный Drive.
+    /// 02.10.2026: заливка результата "export-all" на Google Drive.
+    ///
+    /// ПЕРВАЯ ВЕРСИЯ использовала сервисный аккаунт — живой прогон показал, что это
+    /// в принципе не работает на обычном личном Диске (не Google Workspace):
+    /// "Service Accounts do not have storage quota" — сервисный аккаунт может создавать
+    /// ПАПКИ (они не расходуют квоту), но не может залить СОДЕРЖИМОЕ файла (им владеть
+    /// физически негде). Нужны либо Shared Drive (только Workspace), либо OAuth от
+    /// настоящего пользователя — отсюда текущая версия: OAuth "installed app" flow
+    /// (GoogleWebAuthorizationBroker), токен кэшируется локально после первого входа
+    /// в браузере, дальше работает без браузера. Скоуп — узкий DriveFile (доступ только
+    /// к файлам, созданным самим приложением), а не полный Drive.
     /// </summary>
     public class GoogleDriveUploader
     {
         private readonly DriveService _service;
         private readonly string _folderId;
 
-        public GoogleDriveUploader(string serviceAccountKeyPath, string folderId)
+        public GoogleDriveUploader(string clientSecretPath, string tokenStoreDir, string folderId)
         {
-            // 02.10.2026: File.Exists на относительном пути смотрит в ТЕКУЩУЮ РАБОЧУЮ
-            // ДИРЕКТОРИЮ процесса, а не в папку exe — это разные вещи в .NET, и для GUI,
-            // запущенного не из своей папки, они разошлись (appsettings.json при этом
-            // находился нормально, т.к. его грузят с явным SetBasePath(BaseDirectory)).
-            // Приводим относительный путь к папке exe, как и конфиг.
-            if (!Path.IsPathRooted(serviceAccountKeyPath))
-                serviceAccountKeyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, serviceAccountKeyPath);
-
-            if (!File.Exists(serviceAccountKeyPath))
+            if (!Path.IsPathRooted(clientSecretPath))
+                clientSecretPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, clientSecretPath);
+            if (!File.Exists(clientSecretPath))
                 throw new FileNotFoundException(
-                    $"Ключ сервисного аккаунта не найден: {serviceAccountKeyPath}. " +
-                    "Положите drive-service-account.json рядом с exe (в git не коммитится).",
-                    serviceAccountKeyPath);
+                    $"Файл OAuth-учётных данных не найден: {clientSecretPath}. " +
+                    "Скачайте его в Google Cloud Console (OAuth client ID -> Desktop app) и " +
+                    "положите как google-oauth-client.json рядом с exe.",
+                    clientSecretPath);
 
-            GoogleCredential credential;
-            using (var stream = new FileStream(serviceAccountKeyPath, FileMode.Open, FileAccess.Read))
+            UserCredential credential;
+            using (var stream = new FileStream(clientSecretPath, FileMode.Open, FileAccess.Read))
             {
-                credential = GoogleCredential.FromStream(stream)
-                    .CreateScoped(DriveService.Scope.DriveFile);
+                // 02.10.2026: блокирующий .Result — у конструктора нет смысла быть async
+                // (вызывается один раз на запуск из синхронного Main/обработчика кнопки),
+                // так же, как остальная EPLAN-обвязка в этом проекте.
+                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                    GoogleClientSecrets.FromStream(stream).Secrets,
+                    new[] { DriveService.Scope.DriveFile },
+                    "user",
+                    CancellationToken.None,
+                    new FileDataStore(tokenStoreDir, true)).Result;
             }
 
             _service = new DriveService(new BaseClientService.Initializer
@@ -98,7 +109,15 @@ namespace EplanCipMvp.App
                     : "application/octet-stream";
                 var request = _service.Files.Create(metadata, stream, mimeType);
                 request.Fields = "id";
-                request.Upload();
+                // 02.10.2026: request.Upload() для медиа-загрузки НЕ бросает исключение сам
+                // по себе при сбое (resumable upload, не обычный Execute()) — нужно явно
+                // проверять IUploadProgress.Status/Exception, иначе лог молча врёт об успехе
+                // даже когда файл реально не долетел (так и было с сервисным аккаунтом —
+                // папка создавалась, а Upload() возвращал Status=Failed без исключения).
+                IUploadProgress progress = request.Upload();
+                if (progress.Status != UploadStatus.Completed)
+                    throw new IOException($"Не удалось загрузить '{name}': {progress.Status}" +
+                        (progress.Exception != null ? $" — {progress.Exception.Message}" : ""), progress.Exception);
             }
         }
     }

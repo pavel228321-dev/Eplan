@@ -6,3 +6,4 @@ obj/
 packages/
 appsettings.Local.json
 drive-service-account*.json
+google-oauth-client*.json

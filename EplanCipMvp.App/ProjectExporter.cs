@@ -41,7 +41,10 @@ namespace EplanCipMvp.App
             log($"Файлы сохранены локально: {outDir}");
 
             log("Заливка на Google Drive...");
-            var uploader = new GoogleDriveUploader(driveSettings.ServiceAccountKeyPath, driveSettings.FolderId);
+            // AppPaths.UserFile — для файлов (с переносом "легаси" из папки exe), а тут нужна
+            // просто папка под кэш токена; берём тот же %APPDATA%\EplanCipMvp (AppPaths.DataDir).
+            string tokenDir = System.IO.Path.Combine(AppPaths.DataDir ?? AppDomain.CurrentDomain.BaseDirectory, "google-drive-token");
+            var uploader = new GoogleDriveUploader(driveSettings.CredentialsPath, tokenDir, driveSettings.FolderId);
             return uploader.UploadFolder(outDir, msg => log("  " + msg));
         }
 

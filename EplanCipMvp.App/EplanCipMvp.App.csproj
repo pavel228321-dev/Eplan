@@ -37,10 +37,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <!--
-      02.10.2026: JSON-ключ сервисного аккаунта Google Drive (команда "export-all").
-      НЕ коммитится (см. .gitignore) — положить вручную рядом с exe.
+      02.10.2026: OAuth client ID (Desktop app, Google Cloud Console) для заливки на
+      Google Drive (команда "export-all" / кнопка в GUI). НЕ сервисный аккаунт — у тех
+      нет квоты на обычном личном Диске (см. GoogleDriveUploader.cs). НЕ коммитится
+      (см. .gitignore) — положить вручную рядом с exe.
     -->
-    <None Include="drive-service-account.json" Condition="Exists('drive-service-account.json')">
+    <None Include="google-oauth-client.json" Condition="Exists('google-oauth-client.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
